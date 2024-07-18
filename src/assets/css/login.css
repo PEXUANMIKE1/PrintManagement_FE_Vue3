@@ -1,0 +1,77 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.login-card {
+  padding: 24px;
+  max-width: 450px;
+  width: 100%;
+  border-radius: 16px;
+  background-color: white;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.logo {
+  display: block;
+  margin: 0 auto 24px auto;
+}
+
+.form-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 24px;
+}
+
+.forgot-password {
+  text-align: right;
+  margin: 8px 0;
+}
+
+.login-button {
+  font-weight: bold;
+}
+
+.sign-up {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.sign-up a {
+  color: #006eff;
+  font-weight: bold;
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Khoảng cách giữa các biểu tượng */
+}
+
+.social-icon {
+  font-size: 36px; /* Kích thước của biểu tượng */
+  color: #333; /* Màu của biểu tượng */
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+}
+
+.divider hr {
+  flex: 1;
+  border: none;
+  border-top: 1px solid #ccc;
+}
+
+.divider span {
+  padding: 0 10px;
+  font-size: 18px;
+}
