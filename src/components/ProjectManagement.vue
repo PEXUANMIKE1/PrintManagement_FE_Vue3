@@ -124,7 +124,8 @@
         <v-card class="card-custom elevation-12 rounded-lg">
           <v-img
             class="img-card-project"
-            src="https://th.bing.com/th/id/OIP.yaAt923ojNxHZON21b7XOgHaJd?rs=1&pid=ImgDetMain"
+            height="428px"
+            :src="baseImgUrl + item.projectImg"
           />
           <v-card-title
             ><h3>{{ item.projectName }}</h3></v-card-title
@@ -138,7 +139,7 @@
           </v-card-text>
           <v-card-text class="progress-card">
             <div class="d-flex align-center">
-              <span>Tiến độ: {{ progress }}%</span>
+              <span>Tiến độ: {{ progress(item.projectStatus) }}%</span>
             </div>
           </v-card-text>
 
@@ -164,10 +165,17 @@
                   class="mx-3 mt-3 mb-3"
                   color="green"
                   icon="mdi mdi-eye-outline"
+                  @click="DetailProject(item.id)"
                 ></v-btn>
               </template>
             </v-tooltip>
-            <v-tooltip text="Xóa dự án">
+            <v-tooltip
+              text="Xóa dự án"
+              v-if="
+                hasRole('Admin') ||
+                (hasRole('Employee') && user.teamName == 'Sales')
+              "
+            >
               <template v-slot:activator="{ props }">
                 <v-btn
                   v-bind="props"
@@ -185,7 +193,7 @@
     <v-pagination v-model="currentPage" :length="pageCount"></v-pagination>
   </div>
 
-  <!-- show form create new team -->
+  <!-- show form create new peoject -->
   <v-overlay
     v-model="FormCreateNewProject"
     opacity="0.7"
@@ -227,6 +235,16 @@
                 label="Địa chỉ"
                 clearable
                 prepend-inner-icon="mdi mdi-map-marker"
+                required
+                :rules="[(v) => !!v || 'This field is required']"
+              />
+              <v-text-field
+                v-model="customerEmailCreate"
+                variant="outlined"
+                label="Email"
+                type="email"
+                clearable
+                prepend-inner-icon="mdi mdi-email-outline"
                 required
                 :rules="[(v) => !!v || 'This field is required']"
               />
@@ -293,7 +311,7 @@
               <v-textarea
                 v-model="projectDescCreate"
                 variant="outlined"
-                label="Mô tả yêu cầu"
+                label="Yêu cầu của khách hàng"
                 clearable
                 :rules="[(v) => !!v || 'This field is required']"
               >
@@ -324,12 +342,26 @@ import apiService from "@/services/apiService";
 import useAlert from "@/plugins/Alert";
 import useFormat from "@/plugins/Format";
 import { useStore } from "vuex";
+import router from "@/router";
+
+const baseImgUrl = "https://localhost:7262/Upload/Files/";
 
 const store = useStore();
 const hasRole = (role) => store.getters.hasRole(role);
 const user = computed(() => store.state.user);
 
-const progress = ref(100);
+const progress = (projectStatus) => {
+  return projectStatus == "Completed"
+    ? 100
+    : projectStatus == "Designed"
+    ? 25
+    : projectStatus == "ConfirmPrint"
+    ? 50
+    : projectStatus == "Printing"
+    ? 75
+    : 0;
+};
+
 const startDate = ref(null);
 const endDate = ref(null);
 const menu1 = ref(false);
@@ -347,9 +379,12 @@ const loading = ref(false);
 const currentPage = ref(1);
 const itemsPerPage = 8;
 const pageCount = computed(() =>
-  Math.ceil(projects.value.length / itemsPerPage)
+  Math.ceil((projects.value?.length ?? 0) / itemsPerPage)
 );
 const paginatedProjects = computed(() => {
+  if (!projects.value || !Array.isArray(projects.value)) {
+    return [];
+  }
   const start = (currentPage.value - 1) * itemsPerPage;
   const end = start + itemsPerPage;
   return projects.value.slice(start, end);
@@ -364,12 +399,13 @@ const showFormCreateNewProject = async () => {
   FormCreateNewProject.value = true;
 };
 
-//thông tin khách hàng
+//thông tin khách hàng input
+const customerEmailCreate = ref("");
 const customerNameCreate = ref("");
 const customerPhoneCreate = ref("");
 const customerAddressCreate = ref("");
 
-// thông tin project
+// thông tin project input
 const projectNameCreate = ref("");
 const projectDescCreate = ref("");
 const startDateCreate = ref(null);
@@ -387,8 +423,22 @@ const menuEndCreate = ref(false);
 
 const createNewProject = async () => {
   try {
+    if (
+      customerNameCreate.value == "" ||
+      customerEmailCreate.value == "" ||
+      customerPhoneCreate.value == "" ||
+      customerAddressCreate.value == "" ||
+      projectNameCreate.value == "" ||
+      projectDescCreate.value == "" ||
+      startDateCreate.value == "" ||
+      endDateCreate.value == ""
+    ) {
+      await ToggleShowAlert("Yêu cầu nhập đầy đủ thông tin", "error");
+      return;
+    }
     var data = {
       customerFullName: customerNameCreate.value.trim(),
+      customerEmail: customerEmailCreate.value.trim(),
       customerPhoneNumber: customerPhoneCreate.value.trim(),
       customerAddress: customerAddressCreate.value.trim(),
       projectName: projectNameCreate.value.trim(),
@@ -396,18 +446,6 @@ const createNewProject = async () => {
       startDate: startDateCreate.value,
       expectedEndDate: endDateCreate.value,
     };
-    if (
-      data.customerFullName == "" ||
-      data.customerPhoneNumber == "" ||
-      data.customerAddress == "" ||
-      data.projectName == "" ||
-      data.requestDescriptionFromCustomer == "" ||
-      data.startDate == "" ||
-      data.expectedEndDate == ""
-    ) {
-      await ToggleShowAlert("Yêu cầu nhập đầy đủ thông tin", "error");
-      return;
-    }
     console.log(data);
     var res = await apiService.CreateProject(data);
     console.log(res);
@@ -416,8 +454,9 @@ const createNewProject = async () => {
       await ToggleShowAlert(res.message, "error");
       return;
     }
-    await ToggleShowAlert(res.message, "success");
+
     FormCreateNewProject.value = false;
+    await ToggleShowAlert(res.message, "success");
 
     customerAddressCreate.value = "";
     customerNameCreate.value = "";
@@ -431,7 +470,16 @@ const createNewProject = async () => {
     await ToggleShowAlert(err.message, "error");
   }
 };
-//
+// detail project
+const DetailProject = async (id) => {
+  try {
+    //console.log(id);
+    router.push(`/projects-detail/${id}`);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 //get all project
 const fetchProjects = async () => {
   loading.value = true;
@@ -442,11 +490,8 @@ const fetchProjects = async () => {
     } else {
       response = await apiService.GetAllProject();
     }
-    console.log(response.data);
-    if (response.data == null) {
-      ToggleShowAlert("Danh sách trống", "error");
-    }
     projects.value = response.data;
+    //console.log(projects.value);
     loading.value = false;
   } catch (err) {
     console.error(err);

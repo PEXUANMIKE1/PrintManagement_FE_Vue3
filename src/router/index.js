@@ -10,6 +10,11 @@ import ProfilePage from "@/components/ProfilePage.vue";
 import UsersManagement from "@/components/UsersManagement.vue";
 import TeamsManagement from "@/components/TeamManagement.vue";
 import ProjectManagement from "@/components/ProjectManagement.vue";
+import ProjectDetail from "@/components/ProjectDetail.vue";
+import ProjectDesign from "@/components/ProjectDesign.vue";
+import ProjectPrint from "@/components/ProjectPrint.vue";
+import ProjectDelivery from "@/components/ProjectDelivery.vue";
+import ShippingManagement from "@/components/ShippingManagement.vue";
 import store from "@/store";
 
 const routes = [
@@ -23,7 +28,12 @@ const routes = [
   { path: '/profilepage', name: 'profilepage', component: ProfilePage, meta: { requiresAuth: true } },
   { path: '/users-management', name: 'usersmanagement', component: UsersManagement, meta: { requiresAuth: true } },
   { path: '/teams-management', name: 'teamsmanagement', component: TeamsManagement, meta: { requiresAuth: true } },
+  { path: '/shipping-management', name: 'ShippingManagement', component: ShippingManagement, meta: { requiresAuth: true } },
   { path: '/projects-management', name: 'projectsmanagement', component: ProjectManagement, meta: { requiresAuth: true } },
+  { path: '/projects-detail/:id', name: 'ProjectsDetail', component: ProjectDetail, meta: { requiresAuth: true, noLayout: true} },
+  { path: '/projects-design/:id', name: 'ProjectDesign', component: ProjectDesign, meta: { requiresAuth: true, noLayout: true} },
+  { path: '/projects-print/:id', name: 'ProjectPrint', component: ProjectPrint, meta: { requiresAuth: true, noLayout: true} },
+  { path: '/projects-delivery/:id', name: 'ProjectDelivery', component: ProjectDelivery, meta: { requiresAuth: true, noLayout: true} },
 ];
 
 const router = createRouter({

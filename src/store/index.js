@@ -71,7 +71,7 @@ export const store = createStore({
         return false;
       }
     },
-    logout({ commit }) {
+    async logout({ commit }) {
       commit("LOGOUT");
     },
     initializeStore({ commit }) {

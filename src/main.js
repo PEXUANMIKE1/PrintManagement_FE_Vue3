@@ -16,5 +16,9 @@ store.dispatch('initializeStore').then(() => {
       app.config.globalProperties.$axios = axiosPlugin
     }
   })
+
+  app.config.errorHandler = (err, vm, info) => {
+    console.error(`[Global Error Handler] Error: ${err.toString()}\nInfo: ${info}`);
+  };
   app.use(router).use(vuetify).use(store).mount('#app')
 });

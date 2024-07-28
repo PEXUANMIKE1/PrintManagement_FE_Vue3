@@ -32,28 +32,15 @@
         >
         </v-text-field>
         <div class="text-subtitle-1 text-medium-emphasis">Ngày sinh</div>
-        <v-menu
-          v-model="menu"
-          :close-on-content-click="false"
-          transition="scale-transition"
-        >
-          <template v-slot:activator="{ props }">
-            <v-text-field
-              v-model="date"
-              placeholder="Ngày sinh"
-              prepend-inner-icon="mdi-calendar-outline"
-              readonly
-              clearable
-              v-bind="props"
-              variant="outlined"
-              :rules="rulesBase"
-            ></v-text-field>
-          </template>
-          <v-date-picker
-            v-model="date"
-            @update:model-value="menu = false"
-          ></v-date-picker>
-        </v-menu>
+        <v-date-input
+          prepend-icon=""
+          prepend-inner-icon="$calendar"
+          placeholder="Ngày sinh"
+          v-model="date"
+          clearable
+          variant="outlined"
+          :rules="rulesBase"
+        ></v-date-input>
         <div class="text-subtitle-1 text-medium-emphasis">Email</div>
         <v-text-field
           v-model="email"
@@ -86,11 +73,7 @@
           :rules="rulesBase"
         >
         </v-text-field>
-        <v-checkbox
-          v-model="agree"
-          required
-          :rules="rulesBase"
-        >
+        <v-checkbox v-model="agree" required :rules="rulesBase">
           <template v-slot:label>
             Tôi đồng ý với&nbsp;
             <a href="#" class="text-decoration-none text-blue" target="_blank">
@@ -108,9 +91,7 @@
         >
         <div class="mb-12 sign-in text-center">
           Bạn đã có tài khoản?
-          <a href="/loginform">
-            Đăng nhập
-          </a>
+          <a href="/loginform"> Đăng nhập </a>
         </div>
         <div class="text-center">
           <div class="divider">
@@ -135,15 +116,30 @@
       </v-form>
     </v-card>
   </div>
+  <v-mai>
+    <v-alert
+      class="alert-card"
+      closable
+      :text="message"
+      v-if="showAlert"
+      title="Thông báo"
+      :type="typeAlert"
+    ></v-alert>
+  </v-mai>
 </template>
 
 <script>
 import { ref } from "vue";
 import apiService from "@/services/apiService";
 import router from "@/router";
-
+import { VDateInput } from "vuetify/labs/VDateInput";
+import useAlert from "@/plugins/Alert";
 export default {
+  components: {
+    VDateInput,
+  },
   setup() {
+    const { ToggleShowAlert } = useAlert();
     const x = ref(false);
     const date = ref(null);
     const menu = ref(false);
@@ -155,10 +151,13 @@ export default {
     const phoneNumber = ref("");
     const form = ref(null);
     const isValid = ref(false);
-    const rulesBase = [v => !!v || 'Không được bỏ trống ô này'];
-    const emailRules = [v => !!v || 'Không được bỏ trống ô này',
-    v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || 'Định dạng email không chính xác'];
-
+    const rulesBase = [(v) => !!v || "Không được bỏ trống ô này"];
+    const emailRules = [
+      (v) => !!v || "Không được bỏ trống ô này",
+      (v) =>
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ||
+        "Định dạng email không chính xác",
+    ];
 
     const register = async () => {
       if (form.value.validate()) {
@@ -171,15 +170,18 @@ export default {
             email: email.value,
             phoneNumber: phoneNumber.value,
           };
-          // console.log("Register form: ", registerForm);
           var res = await apiService.Register(registerForm);
-          if(res.status == 201){
-            alert(res.message);
-          }
           console.log(res);
+          if (res.status == 201) {
+            alert(res.message);
+          } else {
+            alert(res.message);
+            return;
+          }
           router.push("/confirm-code-register");
         } catch (error) {
           console.log("Register fail", error);
+          ToggleShowAlert(error.message, "error");
         }
       }
     };
@@ -198,16 +200,27 @@ export default {
       isValid,
       emailRules,
       rulesBase,
+      ToggleShowAlert,
     };
   },
 };
 </script>
 <style scoped>
+
+.alert-card {
+  z-index: 4000;
+  position: fixed;
+  top: 10%;
+  left: 85%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  padding: 20px;
+}
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  min-height: 130vh;
   background: linear-gradient(135deg, #667eea, #764ba2);
 }
 

@@ -13,7 +13,7 @@
 
     <v-row v-if="user && !loading">
       <v-col cols="12" md="3">
-        <v-img cover :src="user.avatar" class="rounded-circle img"></v-img>
+        <v-img cover :src="avatarUrl" class="rounded-circle img"></v-img>
         <v-list>
           <v-list-item link @click="showChangePassword = false">
             <v-list-item-content>
@@ -228,12 +228,10 @@
   </v-card>
 </template>
 
-<script>
+<script setup>
 import apiService from "@/services/apiService";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 
-export default {
-  setup() {
     const loading = ref(true);
     const user = ref(null);
     const showCurrentPassword = ref(false);
@@ -243,17 +241,28 @@ export default {
     const newPassword = ref("");
     const confirmPassword = ref("");
     const showChangePassword = ref(false);
-
+    //const baseUrl = process.env.VUE_APP_BASE_API_URL;
+    const baseUrl = 'https://localhost:7262/';
     const getUserDetails = async () => {
       try {
         const res = await apiService.GetInforMyself();
         user.value = res.data;
+        //console.log(user.value);
+        //console.log(process.env.VUE_APP_BASE_API_URL);
       } catch (error) {
         console.error(error);
       } finally {
         loading.value = false;
       }
     };
+
+    const avatarUrl = computed(()=>{
+      if(user.value && user.value.avatar){
+        return `${baseUrl}Upload/Files/${user.value.avatar}`;
+      }
+      return 'https://cdn1.iconfinder.com/data/icons/user-pictures/100/unknown-1024.png';
+    });
+
 
     const formatDate = (dateString) => {
       const options = { year: "numeric", month: "long", day: "numeric" };
@@ -296,22 +305,6 @@ export default {
       getUserDetails();
     });
 
-    return {
-      user,
-      loading,
-      formatDate,
-      currentPassword,
-      newPassword,
-      confirmPassword,
-      changePassword,
-      changeinfo,
-      showChangePassword,
-      showCurrentPassword,
-      showNewPassword,
-      showConfirmPassword,
-    };
-  },
-};
 </script>
 
 <style scoped>
@@ -324,7 +317,7 @@ export default {
 }
 
 .profile-card {
-  height: 93%;
+  height: 97%;
   margin: 20px;
 }
 

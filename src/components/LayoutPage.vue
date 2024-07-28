@@ -5,7 +5,7 @@
         <router-link to="/profilepage" class="text-decoration-none text-white">
           <v-list-item link>
             <v-list-item-content>
-              <v-list-item-title class="text-h5">
+              <v-list-item-title class="text-h6">
                 {{ user ? user.fullName : "Đang tải..." }}
               </v-list-item-title>
               <v-list-item-subtitle>{{
@@ -17,7 +17,7 @@
       </v-list>
 
       <v-divider></v-divider>
-
+      <!-- list chức năng -->
       <v-list nav dense>
         <v-list-item-group v-model="selectedItem">
           <v-list-item
@@ -41,32 +41,24 @@
         <v-icon>mdi-magnify</v-icon>
       </v-btn>
       <v-btn icon>
-        <v-icon>mdi-bell</v-icon>
+        <notification-menu></notification-menu>
       </v-btn>
       <v-btn class="mx-4" @click="logout" variant="outlined"> Logout </v-btn>
     </v-app-bar>
 
     <v-main>
-      <v-alert
-        class="alert-card"
-        closable
-        :text="message"
-        v-if="showAlert"
-        title="Thông báo"
-        :type="typeAlert"
-      ></v-alert>
       <router-view> </router-view>
     </v-main>
   </v-app>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useStore } from "vuex";
 import router from "@/router";
-import useAlert from "@/plugins/Alert";
+import apiService from "@/services/apiService";
+import NotificationMenu from "@/components/NotificationMenu.vue";
 
-const { message, showAlert, typeAlert } = useAlert();
 const store = useStore();
 const drawer = ref(true);
 const selectedItem = ref(0);
@@ -75,17 +67,11 @@ const user = computed(() => store.state.user);
 const hasRole = (role) => store.getters.hasRole(role);
 const roleName = computed(() => user.value.Permissions);
 
-// const roles = computed(() => {
-//   const userRoles = store.getters.userRoles;
-//   return Array.isArray(userRoles) ? userRoles : [userRoles];
-// });
-
 const logout = async () => {
   await store.dispatch("logout");
   router.push("/loginform");
 };
 
-//const hasRole = (role) => roles.value.includes(role);
 const menuItems = computed(() => {
   let items = [{ title: "Trang chủ", icon: "mdi-home", to: "/" }];
 
@@ -101,28 +87,71 @@ const menuItems = computed(() => {
         icon: "mdi-account-group",
         to: "/teams-management",
       },
-      { title: "Quản lý dự án", icon: "mdi-briefcase", to: "/projects-management" },
+      {
+        title: "Quản lý dự án",
+        icon: "mdi-briefcase",
+        to: "/projects-management",
+      },
+      {
+        title: "Quản lý giao hàng",
+        icon: "mdi-truck-delivery-outline",
+        to: "/shipping-management",
+      },
       { title: "Quản lý tài nguyên", icon: "mdi-cube", to: "/resources" },
       { title: "Báo cáo", icon: "mdi-file-chart", to: "/reports" }
     );
   }
-  if (hasRole("Sales")) {
-    items.push(
-      { title: "Quản lý dự án", icon: "mdi-briefcase", to: "/projects-management" },
-    );
-  }
   if (hasRole("Employee") && user.value.teamName == "Sales") {
     items.push(
-      { title: "Quản lý dự án", icon: "mdi-briefcase", to: "/projects-management" },
+      {
+        title: "Quản lý dự án",
+        icon: "mdi-briefcase",
+        to: "/projects-management",
+      }
+      // ,
+      // {
+      //   title: "Quản lý giao hàng",
+      //   icon: "mdi-truck-delivery-outline",
+      //   to: "/shipping-management",
+      // }
     );
   }
-  if (hasRole("Manager")) {
-    items.push(
-      { title: "Quản lý nhóm", icon: "mdi-account-group", to: "/teams" },
-      { title: "Báo cáo", icon: "mdi-file-chart", to: "/reports" }
-    );
+  if (hasRole("Designer")) {
+    items.push({
+      title: "Quản lý dự án",
+      icon: "mdi-briefcase",
+      to: "/projects-management",
+    });
+  }
+  if (user.value && user.value.teamName == "Delivery") {
+    items.push({
+      title: "Quản lý giao hàng",
+      icon: "mdi-truck-delivery-outline",
+      to: "/shipping-management",
+    });
+    if (user.value.fullName == Team.value.managerName) {
+      items.push({
+        title: "Quản lý dự án",
+        icon: "mdi-briefcase",
+        to: "/projects-management",
+      });
+    }
   }
 
   return items;
+});
+
+const Team = ref(null);
+const GetTeamByTeamName = async (teamName) => {
+  try {
+    var res = await apiService.GetTeamByTeamName(teamName);
+    Team.value = res.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+onMounted(() => {
+  GetTeamByTeamName("Delivery");
 });
 </script>

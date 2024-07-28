@@ -1,7 +1,7 @@
 // src/plugins/axios.js
 import axios from "axios";
 import store from "@/store";
-import router from "@/router";
+//import router from "@/router";
 
 
 const apiUrl = "https://localhost:7262/";
@@ -21,15 +21,15 @@ axiosInstance.interceptors.request.use(config => {
 });
 
 // Xử lý khi token hết hạn
-axiosInstance.interceptors.response.use(response => {
-  return response;
-}, error => {
-  if (error.response && error.response.status === 401) {
+// axiosInstance.interceptors.response.use(response => {
+//   return response;
+// }, error => {
+//   if (error.response && error.response.status === 401) {
 
-    store.dispatch('logout'); 
-    router.push('/loginform');
-  }
-  return Promise.reject(error);
-});
+//     store.dispatch('logout'); 
+//     router.push('/loginform');
+//   }
+//   return Promise.reject(error);
+// });
 
 export default axiosInstance;
